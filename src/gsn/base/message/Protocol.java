@@ -1,5 +1,6 @@
 package gsn.base.message;
 
+import com.sun.org.apache.xerces.internal.impl.dv.util.HexBin;
 import gsn.base.CLogger;
 import gsn.base.session.Session;
 
@@ -43,10 +44,17 @@ public class Protocol {
     }
 
     public static void write(Session session, Msg msg, ByteBuffer byteBuffer) {
-        CLogger.log("Write Cmd", msg.commandId, "to", session.id);
-        byteBuffer.putInt(msg.senderId);
-        byteBuffer.putInt(msg.commandId);
-        putString(msg.dataContent, byteBuffer);
+        ByteBuffer dataByteBuffer = ByteBuffer.allocate(SIZE);
+        dataByteBuffer.putInt(msg.senderId);
+        dataByteBuffer.putInt(msg.commandId);
+        putString(msg.dataContent, dataByteBuffer);
+        dataByteBuffer.flip();
+        int size = dataByteBuffer.remaining();
+        CLogger.log("Write Cmd", msg.commandId, "to", session.id, "size", size);
+
+        byteBuffer.clear();
+        byteBuffer.putInt(size);
+        byteBuffer.put(dataByteBuffer);
         byteBuffer.flip();
         try {
             session.socket.write(byteBuffer);

@@ -42,7 +42,7 @@ public class Reader implements Runnable {
                 acquireNewSession();
                 // process read data from channels
                 processInputData();
-                Thread.sleep(1000);
+                Thread.sleep(50);
             } catch (Exception e) {
                 e.printStackTrace();
             }

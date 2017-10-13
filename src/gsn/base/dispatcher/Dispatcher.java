@@ -20,7 +20,7 @@ public class Dispatcher {
         for (Session s : sessionSet) {
             msg.receiverId = s.id;
             Server.getInstance().getWriter().addQueueMsg(msg);
-            CLogger.log("Dispatching" , msg.commandId);
+            CLogger.log("Dispatching" , msg.commandId, "to", msg.receiverId);
         }
     }
 }

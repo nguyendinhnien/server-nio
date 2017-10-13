@@ -63,6 +63,7 @@ public class Writer implements Runnable {
         int readyKey = writeSelector.selectNow();
         if ( readyKey > 0 ) {
             Iterator<SelectionKey> keyIterator = writeSelector.selectedKeys().iterator();
+            System.out.println("Total writer selectedKeys = " + readyKey);
             while ( keyIterator.hasNext() ) {
                 SelectionKey selectionKey = keyIterator.next();
                 Session session = (Session) selectionKey.attachment();
@@ -83,6 +84,7 @@ public class Writer implements Runnable {
     private void registerNonEmptyChannel() throws ClosedChannelException {
         for (Session session : emptytoNonEmptySessionSet ) {
             session.socket.register(writeSelector, SelectionKey.OP_WRITE, session);
+            CLogger.log("Register to writeSelector " + session);
         }
         emptytoNonEmptySessionSet.clear();
     }

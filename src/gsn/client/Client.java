@@ -13,6 +13,7 @@ public class Client implements Runnable {
     Scenario scenario;
 
     static final int SIZE = 50;
+    static final int LEN_SIZE = 4;
 
     ByteBuffer writeByteBuffer = ByteBuffer.allocate(SIZE);
 
@@ -27,7 +28,7 @@ public class Client implements Runnable {
 
     public void sendHelloMsg(OutputStream outputStream, int i) throws IOException {
         writeByteBuffer.putInt(i);
-        putString("Hello ", writeByteBuffer);
+        putString("Hello", writeByteBuffer);
         writeByteBuffer.flip();
         byte[] bytes = writeByteBuffer.array();
         outputStream.write(bytes);
@@ -38,16 +39,26 @@ public class Client implements Runnable {
     public void receiveMsg(InputStream inputStream) throws IOException {
         DataInputStream dataInputStream = new DataInputStream(inputStream);
         if ( inputStream.available() <= 0 ) return;
-        byte[] readByteArray = new byte[dataInputStream.available()];
-        int bytes = dataInputStream.read(readByteArray);
-        ByteBuffer byteBuffer = ByteBuffer.allocate(bytes);
-        byteBuffer.put(readByteArray, 0, readByteArray.length);
-        byteBuffer.flip();
-        int socketId = byteBuffer.getInt();
-        int cmdId = byteBuffer.getInt();
-        String msg = getString(byteBuffer);
-        log(String.format("Receive msg %s  - bytes %s", msg, bytesToHex(readByteArray)));
-        byteBuffer.clear();
+        byte[] readByteArray = new byte[SIZE];
+        byte[] sizeBytes = new byte[4];
+        int offset = 0;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(SIZE);
+        int totalSize = dataInputStream.available();
+        while (dataInputStream.available() > offset) {
+            int bytes = dataInputStream.read(sizeBytes,0,LEN_SIZE);
+            int sizeMsg = ByteBuffer.wrap(sizeBytes).getInt();
+
+            bytes = dataInputStream.read(readByteArray, 0, sizeMsg);
+            offset+= LEN_SIZE;
+            offset+=sizeMsg;
+            byteBuffer.put(readByteArray);
+            byteBuffer.flip();
+            int socketId = byteBuffer.getInt();
+            int cmdId = byteBuffer.getInt();
+            String msg = getString(byteBuffer);
+            log(String.format("Receive msg %s  - bytes %s - size %s", msg, bytesToHex(readByteArray), totalSize));
+            byteBuffer.clear();
+        }
     }
 
     private static void putString(String s, ByteBuffer byteBuffer) {
